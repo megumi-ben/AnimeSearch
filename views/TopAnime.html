@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnimeTOP - 动漫热门排行榜</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+        }
+
+        .controls-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .load-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .load-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .load-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+        }
+
+        /* 动漫卡片样式 - 纵向布局 */
+        .anime-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .anime-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .anime-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 排名标识 */
+        .ranking-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+            z-index: 10;
+        }
+
+        .ranking-badge.top1 {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .ranking-badge.top2 {
+            background: linear-gradient(45deg, #C0C0C0, #A9A9A9);
+            box-shadow: 0 4px 15px rgba(192, 192, 192, 0.4);
+        }
+
+        .ranking-badge.top3 {
+            background: linear-gradient(45deg, #CD7F32, #B8860B);
+            box-shadow: 0 4px 15px rgba(205, 127, 50, 0.4);
+        }
+
+        .ranking-badge.other {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .anime-poster {
+            width: 100%;
+            height: 350px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .anime-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .anime-card:hover .anime-poster img {
+            transform: scale(1.05);
+        }
+
+        .anime-info {
+            padding: 20px;
+        }
+
+        .anime-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.4;
+        }
+
+        .anime-title-japanese {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .anime-stats {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #555;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .score-badge {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .rank-badge {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .anime-synopsis {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.9rem;
+            max-height: 75px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
+            -webkit-box-orient: vertical;
+        }
+
+        .anime-genres {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .genre-tag {
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff6b6b;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 107, 107, 0.2);
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+            gap: 10px;
+        }
+
+        .pagination-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .pagination-btn:hover {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border-color: #ff6b6b;
+        }
+
+        .pagination-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pagination-info {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            margin: 0 15px;
+        }
+
+        /* 详情模态框样式 */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .detail-content {
+            max-width: 900px;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .detail-header {
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            color: white;
+            display: flex;
+            align-items: flex-start;
+            gap: 30px;
+        }
+
+        .detail-poster {
+            width: 250px;
+            height: 350px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .detail-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .detail-anime-info {
+            flex: 1;
+        }
+
+        .detail-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
+        }
+
+        .detail-title-japanese {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .detail-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .detail-stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px 18px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 107, 107, 0.8);
+            transform: scale(1.1);
+        }
+
+        .detail-body {
+            padding: 40px;
+        }
+
+        .detail-synopsis {
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: #444;
+            margin-bottom: 30px;
+            white-space: pre-line;
+        }
+
+        .detail-genres {
+            margin-bottom: 30px;
+        }
+
+        .detail-genres h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.3rem;
+        }
+
+        .detail-genre-tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .detail-genre-tag {
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            color: #667eea;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .detail-external-link {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .detail-external-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .anime-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .detail-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .detail-poster {
+                width: 200px;
+                height: 280px;
+                align-self: center;
+            }
+
+            .detail-title {
+                font-size: 1.8rem;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 AnimeTOP 🏆</h1>
+            <p>发现最受欢迎的动漫作品，探索经典与新作的魅力</p>
+        </div>
+
+        <div class="controls-section">
+            <button class="load-btn" id="loadBtn" onclick="loadTopAnime()">
+                🎌 加载热门动漫排行榜
+            </button>
+        </div>
+
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            正在加载精彩的动漫排行榜...
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <div id="resultsSection" class="anime-grid">
+            <!-- 搜索结果将在这里显示 -->
+        </div>
+
+        <div id="paginationSection" class="pagination" style="display: none;">
+            <!-- 分页控件将在这里显示 -->
+        </div>
+
+        <!-- 动漫详情模态框 -->
+        <div id="detailModal" class="detail-modal">
+            <div class="detail-content">
+                <div class="detail-header">
+                    <button class="close-btn" onclick="closeDetail()">×</button>
+                    <div class="detail-poster">
+                        <img id="detailPoster" src="" alt="动漫海报">
+                    </div>
+                    <div class="detail-anime-info">
+                        <h1 id="detailTitle" class="detail-title"></h1>
+                        <p id="detailTitleJapanese" class="detail-title-japanese"></p>
+                        <div class="detail-stats">
+                            <div class="detail-stat-item">
+                                <div class="stat-label">排名</div>
+                                <div id="detailRank" class="stat-value">#--</div>
+                            </div>
+                            <div class="detail-stat-item">
+                                <div class="stat-label">评分</div>
+                                <div id="detailScore" class="stat-value">--</div>
+                            </div>
+                            <div class="detail-stat-item">
+                                <div class="stat-label">集数</div>
+                                <div id="detailEpisodes" class="stat-value">--</div>
+                            </div>
+                            <div class="detail-stat-item">
+                                <div class="stat-label">状态</div>
+                                <div id="detailStatus" class="stat-value">--</div>
+                            </div>
+                            <div class="detail-stat-item">
+                                <div class="stat-label">类型</div>
+                                <div id="detailType" class="stat-value">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-body">
+                    <div id="detailSynopsis" class="detail-synopsis"></div>
+                    <div id="detailGenresSection" class="detail-genres">
+                        <h3>🎯 类型标签</h3>
+                        <div id="detailGenres" class="detail-genre-tags"></div>
+                    </div>
+                    <a id="detailExternalLink" class="detail-external-link" href="#" target="_blank">
+                        🔗 在MyAnimeList查看详情
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentAnimeList = [];
+
+        // 初始化页面
+        function initializePage() {
+            console.log('AnimeTOP页面已加载');
+        }
+
+        // 加载热门动漫排行榜
+        async function loadTopAnime(page = 1) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+            const resultsSection = document.getElementById('resultsSection');
+            const paginationSection = document.getElementById('paginationSection');
+            const loadBtn = document.getElementById('loadBtn');
+
+            currentPage = page;
+
+            // 重置显示状态
+            loadingIndicator.style.display = 'block';
+            errorMessage.style.display = 'none';
+            // 只在第一次加载时清空结果区域
+            if (page === 1) {
+                resultsSection.innerHTML = '';
+            }
+            // 暂时隐藏分页控件，等数据加载完成后再显示
+            paginationSection.style.display = 'none';
+            loadBtn.disabled = true;
+
+            try {
+                // 发起API请求
+                const response = await fetch(`https://animedb1.p.rapidapi.com/top/anime?page=${page}&limit=25`, {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-key': '233ac3bb36mshcc33feefaa6dba5p1df36cjsn5ccbf45c3865',
+                        'x-rapidapi-host': 'animedb1.p.rapidapi.com'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.data || data.data.length === 0) {
+                    showError('没有找到动漫数据');
+                    return;
+                }
+
+                // 存储当前动漫列表
+                currentAnimeList = data.data;
+
+                displayAnimeResults(data.data);
+                // 优先使用 meta 数据，如果没有则使用 pagination 数据
+                updatePagination(data.meta || data.pagination);
+
+            } catch (error) {
+                console.error('加载失败:', error);
+                showError('加载热门动漫失败，请检查网络连接或稍后重试。错误信息: ' + error.message);
+            } finally {
+                loadingIndicator.style.display = 'none';
+                loadBtn.disabled = false;
+            }
+        }
+
+        // 显示动漫结果
+        function displayAnimeResults(animeList) {
+            const resultsSection = document.getElementById('resultsSection');
+            
+            if (animeList.length === 0) {
+                resultsSection.innerHTML = '<div class="no-results">😔 没有找到动漫数据！</div>';
+                return;
+            }
+
+            resultsSection.innerHTML = animeList.map((anime, index) => 
+                createAnimeCard(anime, index)
+            ).join('');
+        }
+
+        // 创建动漫卡片
+        function createAnimeCard(anime, index) {
+            const imageUrl = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
+            const titleJapanese = anime.title_japanese || '';
+            const score = anime.score || '--';
+            const rank = anime.rank || '--';
+            const episodes = anime.episodes || '?';
+            const status = anime.status || '未知';
+            const type = anime.type || '未知';
+            const synopsis = anime.synopsis ? 
+                (anime.synopsis.length > 200 ? 
+                    anime.synopsis.substring(0, 200) + '...' : 
+                    anime.synopsis) : 
+                '暂无介绍';
+
+            // 计算实际排名
+            const actualRank = (currentPage - 1) * 25 + index + 1;
+            let badgeClass = 'other';
+            if (actualRank === 1) badgeClass = 'top1';
+            else if (actualRank === 2) badgeClass = 'top2';
+            else if (actualRank === 3) badgeClass = 'top3';
+
+            // 获取前3个类型
+            const genres = anime.genres ? anime.genres.slice(0, 3) : [];
+
+            return `
+                <div class="anime-card" onclick="showAnimeDetail(${anime.mal_id})">
+                    <div class="ranking-badge ${badgeClass}">${actualRank}</div>
+                    <div class="anime-poster">
+                        <img src="${imageUrl}" alt="${anime.title}" 
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjM1MCIgdmlld0JveD0iMCAwIDMwMCAzNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzUwIiBmaWxsPSIjZjBmMGYwIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTc1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBmb250LXNpemU9IjE2Ij7ml6Dmtbfmiq88L3RleHQ+Cjwvc3ZnPg=='">
+                    </div>
+                    <div class="anime-info">
+                        <h3 class="anime-title">${anime.title}</h3>
+                        ${titleJapanese ? `<p class="anime-title-japanese">${titleJapanese}</p>` : ''}
+                        <div class="anime-stats">
+                            <span class="rank-badge">🏆 #${rank}</span>
+                            <span class="score-badge">⭐ ${score}</span>
+                            <span class="stat-item">${type}</span>
+                            <span class="stat-item">${episodes}话</span>
+                            <span class="stat-item">${status}</span>
+                        </div>
+                        <p class="anime-synopsis">${synopsis}</p>
+                        ${genres.length > 0 ? `
+                            <div class="anime-genres">
+                                ${genres.map(genre => `<span class="genre-tag">${genre.name}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 更新分页控件
+        function updatePagination(paginationData) {
+            const paginationSection = document.getElementById('paginationSection');
+            
+            // 确保有分页数据
+            if (!paginationData) {
+                console.log('没有分页数据');
+                paginationSection.style.display = 'none';
+                return;
+            }
+
+            // 根据不同的数据结构获取分页信息
+            let lastPage, hasNextPage, totalItems;
+            
+            if (paginationData.last_page) {
+                // 使用 meta 数据结构
+                lastPage = paginationData.last_page;
+                hasNextPage = currentPage < lastPage;
+                totalItems = paginationData.total || 0;
+            } else if (paginationData.last_visible_page) {
+                // 使用 pagination 数据结构
+                lastPage = paginationData.last_visible_page;
+                hasNextPage = paginationData.has_next_page;
+                totalItems = paginationData.items?.total || 0;
+            } else {
+                // 没有有效的分页信息
+                paginationSection.style.display = 'none';
+                return;
+            }
+
+            // 检查是否有足够的数据来显示分页
+            if (lastPage <= 1) {
+                paginationSection.style.display = 'none';
+                return;
+            }
+
+            let paginationHTML = '';
+            
+            // 上一页按钮
+            paginationHTML += `
+                <button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} 
+                        onclick="loadTopAnime(${currentPage - 1})">
+                    ◀ 上一页
+                </button>
+            `;
+
+            // 页码按钮
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(lastPage, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
+                            onclick="loadTopAnime(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            // 下一页按钮
+            paginationHTML += `
+                <button class="pagination-btn" ${!hasNextPage ? 'disabled' : ''} 
+                        onclick="loadTopAnime(${currentPage + 1})">
+                    下一页 ▶
+                </button>
+            `;
+
+            // 分页信息
+            paginationHTML += `
+                <div class="pagination-info">
+                    第 ${currentPage} 页，共 ${lastPage} 页 | 总计 ${totalItems.toLocaleString()} 部动漫
+                </div>
+            `;
+
+            paginationSection.innerHTML = paginationHTML;
+            paginationSection.style.display = 'flex';
+            
+            console.log('分页已更新:', { currentPage, lastPage, hasNextPage, totalItems });
+        }
+
+        // 显示动漫详情
+        function showAnimeDetail(malId) {
+            const anime = currentAnimeList.find(a => a.mal_id === malId);
+            if (!anime) return;
+
+            // 填充详情内容
+            const imageUrl = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
+            document.getElementById('detailPoster').src = imageUrl;
+            document.getElementById('detailTitle').textContent = anime.title;
+            document.getElementById('detailTitleJapanese').textContent = anime.title_japanese || '';
+            document.getElementById('detailRank').textContent = '#' + (anime.rank || '--');
+            document.getElementById('detailScore').textContent = anime.score || '--';
+            document.getElementById('detailEpisodes').textContent = anime.episodes || '?';
+            document.getElementById('detailStatus').textContent = anime.status || '未知';
+            document.getElementById('detailType').textContent = anime.type || '未知';
+            document.getElementById('detailSynopsis').textContent = anime.synopsis || '暂无详细介绍';
+
+            // 如果没有日文名，隐藏该行
+            const titleJapaneseElement = document.getElementById('detailTitleJapanese');
+            if (!anime.title_japanese) {
+                titleJapaneseElement.style.display = 'none';
+            } else {
+                titleJapaneseElement.style.display = 'block';
+            }
+
+            // 处理类型标签
+            const genresContainer = document.getElementById('detailGenres');
+            const allGenres = [...(anime.genres || []), ...(anime.themes || []), ...(anime.demographics || [])];
+            if (allGenres.length > 0) {
+                genresContainer.innerHTML = allGenres.map(genre => 
+                    `<span class="detail-genre-tag">${genre.name}</span>`
+                ).join('');
+                document.getElementById('detailGenresSection').style.display = 'block';
+            } else {
+                document.getElementById('detailGenresSection').style.display = 'none';
+            }
+
+            // 处理外部链接
+            const externalLink = document.getElementById('detailExternalLink');
+            if (anime.url) {
+                externalLink.href = anime.url;
+                externalLink.style.display = 'inline-flex';
+            } else {
+                externalLink.style.display = 'none';
+            }
+
+            // 显示模态框
+            document.getElementById('detailModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭详情页面
+        function closeDetail() {
+            document.getElementById('detailModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        // 点击模态框背景关闭
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('detailModal');
+            if (e.target === modal) {
+                closeDetail();
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDetail();
+            }
+        });
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

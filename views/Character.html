@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnimeCharacter - 动漫角色搜索平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+        }
+
+        .search-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 标签页导航样式 */
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #555;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+        }
+
+        /* 角色卡片样式 - 横向布局 */
+        .character-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            min-height: 150px;
+            position: relative;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 排名标识 */
+        .ranking-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: white;
+            z-index: 10;
+        }
+
+        .ranking-badge.top1 {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .ranking-badge.top2 {
+            background: linear-gradient(45deg, #C0C0C0, #A9A9A9);
+            box-shadow: 0 4px 15px rgba(192, 192, 192, 0.4);
+        }
+
+        .ranking-badge.top3 {
+            background: linear-gradient(45deg, #CD7F32, #B8860B);
+            box-shadow: 0 4px 15px rgba(205, 127, 50, 0.4);
+        }
+
+        .ranking-badge.other {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .character-avatar {
+            width: 120px;
+            height: 150px;
+            flex-shrink: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .character-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .character-card:hover .character-avatar img {
+            transform: scale(1.1);
+        }
+
+        .character-info {
+            flex: 1;
+            padding: 20px 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .character-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .character-name-kanji {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .character-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #555;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .favorites-badge {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .character-about {
+            color: #666;
+            line-height: 1.5;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+            gap: 10px;
+        }
+
+        .pagination-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .pagination-btn:hover {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border-color: #ff6b6b;
+        }
+
+        .pagination-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pagination-info {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            margin: 0 15px;
+        }
+
+        /* 详情模态框样式 */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .detail-content {
+            max-width: 800px;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .detail-header {
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .detail-avatar {
+            width: 200px;
+            height: 250px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .detail-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .detail-character-info {
+            flex: 1;
+        }
+
+        .detail-name {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .detail-name-kanji {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .detail-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .detail-stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 107, 107, 0.8);
+            transform: scale(1.1);
+        }
+
+        .detail-body {
+            padding: 40px;
+        }
+
+        .detail-about {
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: #444;
+            margin-bottom: 30px;
+            white-space: pre-line;
+        }
+
+        .detail-external-link {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .detail-external-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .character-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .character-avatar {
+                width: 100%;
+                height: 200px;
+            }
+
+            .character-info {
+                padding: 20px;
+            }
+
+            .character-stats {
+                justify-content: center;
+            }
+
+            .detail-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .detail-avatar {
+                width: 150px;
+                height: 190px;
+            }
+
+            .detail-name {
+                font-size: 1.8rem;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 AnimeCharacter 🎭</h1>
+            <p>探索你最喜爱的动漫角色，发现他们的精彩故事</p>
+        </div>
+
+        <div class="search-section">
+            <!-- 标签页导航 -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" onclick="switchTab('search')">
+                    🔍 搜索角色
+                </button>
+                <button class="tab-btn" onclick="switchTab('ranking')">
+                    🏆 热门排行榜
+                </button>
+            </div>
+
+            <!-- 搜索角色标签页 -->
+            <div id="searchTab" class="tab-content active">
+                <input type="text" 
+                       class="search-input" 
+                       id="searchInput" 
+                       placeholder="搜索角色名字... (例如: Yui_Yuigahama, Naruto, Edward_Elric)">
+                
+                <button class="search-btn" id="searchBtn" onclick="searchCharacter()">
+                    🔍 搜索角色
+                </button>
+            </div>
+
+            <!-- 热门排行榜标签页 -->
+            <div id="rankingTab" class="tab-content">
+                <button class="search-btn" id="rankingBtn" onclick="loadTopCharacters()">
+                    🏆 加载热门角色排行榜
+                </button>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            正在搜索精彩的动漫角色...
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <div id="resultsSection">
+            <!-- 搜索结果将在这里显示 -->
+        </div>
+
+        <div id="paginationSection" class="pagination" style="display: none;">
+            <!-- 分页控件将在这里显示 -->
+        </div>
+
+        <!-- 角色详情模态框 -->
+        <div id="detailModal" class="detail-modal">
+            <div class="detail-content">
+                <div class="detail-header">
+                    <button class="close-btn" onclick="closeDetail()">×</button>
+                    <div class="detail-avatar">
+                        <img id="detailImage" src="" alt="">
+                    </div>
+                    <div class="detail-character-info">
+                        <h1 class="detail-name" id="detailName"></h1>
+                        <div class="detail-name-kanji" id="detailNameKanji"></div>
+                        <div class="detail-stats">
+                            <div class="detail-stat-item">
+                                <div class="stat-label">MAL ID</div>
+                                <div class="stat-value" id="detailMalId">-</div>
+                            </div>
+                            <div class="detail-stat-item">
+                                <div class="stat-label">收藏数</div>
+                                <div class="stat-value" id="detailFavorites">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-body">
+                    <div class="detail-about" id="detailAbout">
+                        <!-- 详细介绍将在这里显示 -->
+                    </div>
+                    <a id="detailExternalLink" class="detail-external-link" href="#" target="_blank">
+                        🔗 在 MyAnimeList 查看详情
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentQuery = '';
+        let pagination = null;
+        let currentMode = 'search'; // 'search' 或 'ranking'
+        let currentRankingPage = 1;
+
+        // 初始化页面
+        function initializePage() {
+            // 绑定回车键搜索
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchCharacter();
+                }
+            });
+        }
+
+        // 切换标签页
+        function switchTab(tabName) {
+            // 更新标签按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tabName === 'search') {
+                document.querySelector('.tab-btn:first-child').classList.add('active');
+                document.getElementById('searchTab').classList.add('active');
+                currentMode = 'search';
+            } else if (tabName === 'ranking') {
+                document.querySelector('.tab-btn:last-child').classList.add('active');
+                document.getElementById('rankingTab').classList.add('active');
+                currentMode = 'ranking';
+            }
+            
+            // 清空结果和分页
+            document.getElementById('resultsSection').innerHTML = '';
+            document.getElementById('paginationSection').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // 加载热门角色排行榜
+        async function loadTopCharacters(page = 1) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+            const resultsSection = document.getElementById('resultsSection');
+            const paginationSection = document.getElementById('paginationSection');
+            const rankingBtn = document.getElementById('rankingBtn');
+
+            currentMode = 'ranking';
+            currentRankingPage = page;
+
+            // 重置显示状态
+            loadingIndicator.style.display = 'block';
+            errorMessage.style.display = 'none';
+            if (page === 1) {
+                resultsSection.innerHTML = '';
+                paginationSection.style.display = 'none';
+            }
+            rankingBtn.disabled = true;
+
+            try {
+                // 构建查询参数
+                const queryParams = new URLSearchParams({
+                    page: page.toString(),
+                    limit: "25"
+                });
+
+                // 发起API请求
+                const response = await fetch(`https://animedb1.p.rapidapi.com/top/characters?${queryParams}`, {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-key': '233ac3bb36mshcc33feefaa6dba5p1df36cjsn5ccbf45c3865',
+                        'x-rapidapi-host': 'animedb1.p.rapidapi.com'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // 存储分页信息
+                pagination = data.pagination;
+                currentPage = page;
+
+                displayResults(data.data || [], true);
+                updatePagination(true);
+
+            } catch (error) {
+                console.error('加载失败:', error);
+                showError('加载热门角色失败，请检查网络连接或稍后重试。错误信息: ' + error.message);
+            } finally {
+                loadingIndicator.style.display = 'none';
+                rankingBtn.disabled = false;
+            }
+        }
+
+        // 搜索角色
+        async function searchCharacter(page = 1) {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+            const resultsSection = document.getElementById('resultsSection');
+            const paginationSection = document.getElementById('paginationSection');
+            const searchBtn = document.getElementById('searchBtn');
+
+            if (!searchTerm && page === 1) {
+                showError('请输入角色名字进行搜索');
+                return;
+            }
+
+            // 如果是新搜索，重置当前查询
+            if (page === 1) {
+                currentQuery = searchTerm;
+                currentPage = 1;
+            }
+
+            // 重置显示状态
+            loadingIndicator.style.display = 'block';
+            errorMessage.style.display = 'none';
+            if (page === 1) {
+                resultsSection.innerHTML = '';
+                paginationSection.style.display = 'none';
+            }
+            searchBtn.disabled = true;
+
+            try {
+                // 构建查询参数
+                const queryParams = new URLSearchParams({
+                    q: currentQuery,
+                    page: page.toString()
+                });
+
+                // 发起API请求
+                const response = await fetch(`https://animedb1.p.rapidapi.com/characters?${queryParams}`, {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-key': '233ac3bb36mshcc33feefaa6dba5p1df36cjsn5ccbf45c3865',
+                        'x-rapidapi-host': 'animedb1.p.rapidapi.com'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // 存储分页信息
+                pagination = data.pagination;
+                currentPage = page;
+
+                displayResults(data.data || []);
+                updatePagination();
+
+            } catch (error) {
+                console.error('搜索失败:', error);
+                showError('搜索失败，请检查网络连接或稍后重试。错误信息: ' + error.message);
+            } finally {
+                loadingIndicator.style.display = 'none';
+                searchBtn.disabled = false;
+            }
+        }
+
+        // 显示搜索结果
+        function displayResults(characters, isRanking = false) {
+            const resultsSection = document.getElementById('resultsSection');
+            currentCharacters = characters; // 存储当前角色数据
+            
+            if (characters.length === 0) {
+                resultsSection.innerHTML = '<div class="no-results">😔 没有找到匹配的角色，试试调整搜索条件吧！</div>';
+                return;
+            }
+
+            resultsSection.innerHTML = characters.map((character, index) => 
+                createCharacterCard(character, isRanking, index)
+            ).join('');
+        }
+
+        // 创建角色卡片
+        function createCharacterCard(character, isRanking = false, index = 0) {
+            const imageUrl = character.images?.webp?.image_url || character.images?.jpg?.image_url || '';
+            const nameKanji = character.name_kanji || '';
+            const favorites = character.favorites || 0;
+            const about = character.about ? 
+                (character.about.length > 150 ? 
+                    character.about.substring(0, 150) + '...' : 
+                    character.about) : 
+                '暂无详细介绍';
+
+            // 计算排名显示
+            let rankingBadge = '';
+            if (isRanking) {
+                const actualRank = (currentRankingPage - 1) * 25 + index + 1;
+                let badgeClass = 'other';
+                if (actualRank === 1) badgeClass = 'top1';
+                else if (actualRank === 2) badgeClass = 'top2';
+                else if (actualRank === 3) badgeClass = 'top3';
+                
+                rankingBadge = `<div class="ranking-badge ${badgeClass}">${actualRank}</div>`;
+            }
+
+            return `
+                <div class="character-card" onclick="showCharacterDetail(${character.mal_id})">
+                    ${rankingBadge}
+                    <div class="character-avatar">
+                        <img src="${imageUrl}" 
+                             alt="${character.name}" 
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuaXoOWbvueJhzwvdGV4dD48L3N2Zz4='">
+                    </div>
+                    <div class="character-info">
+                        <div class="character-name">${character.name}</div>
+                        ${nameKanji ? `<div class="character-name-kanji">${nameKanji}</div>` : ''}
+                        <div class="character-stats">
+                            <div class="stat-item">ID: ${character.mal_id}</div>
+                            <div class="favorites-badge">
+                                ❤️ ${favorites.toLocaleString()} 收藏
+                            </div>
+                        </div>
+                        <div class="character-about">${about}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 更新分页控件
+        function updatePagination(isRanking = false) {
+            const paginationSection = document.getElementById('paginationSection');
+            
+            if (!pagination || pagination.last_visible_page <= 1) {
+                paginationSection.style.display = 'none';
+                return;
+            }
+
+            let paginationHTML = '';
+            const currentPageNum = isRanking ? currentRankingPage : currentPage;
+            
+            // 上一页按钮
+            paginationHTML += `
+                <button class="pagination-btn" ${currentPageNum === 1 ? 'disabled' : ''} 
+                        onclick="${isRanking ? `loadTopCharacters(${currentPageNum - 1})` : `searchCharacter(${currentPageNum - 1})`}">
+                    ‹ 上一页
+                </button>
+            `;
+
+            // 页码按钮
+            const maxVisiblePages = 5;
+            const lastPage = pagination.last_visible_page;
+            let startPage = Math.max(1, currentPageNum - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(lastPage, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const clickHandler = isRanking ? `loadTopCharacters(${i})` : `searchCharacter(${i})`;
+                paginationHTML += `
+                    <button class="pagination-btn ${i === currentPageNum ? 'active' : ''}" 
+                            onclick="${clickHandler}">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            // 下一页按钮
+            const nextClickHandler = isRanking ? `loadTopCharacters(${currentPageNum + 1})` : `searchCharacter(${currentPageNum + 1})`;
+            paginationHTML += `
+                <button class="pagination-btn" ${!pagination.has_next_page ? 'disabled' : ''} 
+                        onclick="${nextClickHandler}">
+                    下一页 ›
+                </button>
+            `;
+
+            // 分页信息
+            const itemsInfo = pagination.items;
+            const modeText = isRanking ? '排行榜' : '搜索结果';
+            paginationHTML += `
+                <div class="pagination-info">
+                    第 ${currentPageNum} 页，共 ${lastPage} 页 | 
+                    本页 ${itemsInfo.count} 条，共 ${itemsInfo.total} 条${modeText}
+                </div>
+            `;
+
+            paginationSection.innerHTML = paginationHTML;
+            paginationSection.style.display = 'flex';
+        }
+
+        // 存储当前搜索结果用于详情显示
+        let currentCharacters = [];
+
+        // 显示角色详情
+        function showCharacterDetail(malId) {
+            const character = currentCharacters.find(c => c.mal_id === malId);
+            if (!character) return;
+
+            // 填充详情内容
+            const imageUrl = character.images?.webp?.image_url || character.images?.jpg?.image_url || '';
+            document.getElementById('detailImage').src = imageUrl;
+            document.getElementById('detailName').textContent = character.name;
+            document.getElementById('detailNameKanji').textContent = character.name_kanji || '';
+            document.getElementById('detailMalId').textContent = character.mal_id;
+            document.getElementById('detailFavorites').textContent = (character.favorites || 0).toLocaleString();
+            document.getElementById('detailAbout').textContent = character.about || '暂无详细介绍';
+
+            // 如果没有日文名，隐藏该行
+            const nameKanjiElement = document.getElementById('detailNameKanji');
+            if (!character.name_kanji) {
+                nameKanjiElement.style.display = 'none';
+            } else {
+                nameKanjiElement.style.display = 'block';
+            }
+
+            // 处理外部链接
+            const externalLink = document.getElementById('detailExternalLink');
+            if (character.url) {
+                externalLink.href = character.url;
+                externalLink.style.display = 'inline-flex';
+            } else {
+                externalLink.style.display = 'none';
+            }
+
+            // 显示模态框
+            document.getElementById('detailModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭详情页面
+        function closeDetail() {
+            document.getElementById('detailModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        // 点击模态框背景关闭
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('detailModal');
+            if (e.target === modal) {
+                closeDetail();
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDetail();
+            }
+        });
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
