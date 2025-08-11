@@ -140,8 +140,8 @@
         /* 功能卡片网格 */
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
             margin-bottom: 60px;
         }
 
@@ -218,6 +218,14 @@
 
         .ranking-icon {
             background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .random-img-icon {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+        }
+
+        .random-pic-icon {
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
         }
 
         .feature-title {
@@ -300,6 +308,24 @@
             box-shadow: 0 12px 30px rgba(78, 205, 196, 0.4);
         }
 
+        .random-img .feature-button {
+            background: linear-gradient(45deg, #ff9a9e, #fecfef);
+            box-shadow: 0 8px 20px rgba(255, 154, 158, 0.3);
+        }
+
+        .random-img .feature-button:hover {
+            box-shadow: 0 12px 30px rgba(255, 154, 158, 0.4);
+        }
+
+        .random-pic .feature-button {
+            background: linear-gradient(45deg, #a18cd1, #fbc2eb);
+            box-shadow: 0 8px 20px rgba(161, 140, 209, 0.3);
+        }
+
+        .random-pic .feature-button:hover {
+            box-shadow: 0 12px 30px rgba(161, 140, 209, 0.4);
+        }
+
         /* 底部信息区域 */
         .footer-section {
             text-align: center;
@@ -369,11 +395,11 @@
 
             .features-grid {
                 grid-template-columns: 1fr;
-                gap: 30px;
+                gap: 25px;
             }
 
             .feature-card {
-                padding: 30px 20px;
+                padding: 25px 20px;
             }
 
             .feature-icon {
@@ -384,7 +410,40 @@
 
             .feature-stats {
                 flex-direction: column;
-                gap: 10px;
+                gap: 8px;
+            }
+
+            .hero-section {
+                padding: 40px 30px;
+                margin-bottom: 50px;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .feature-card {
+                padding: 20px 15px;
+            }
+
+            .feature-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 2rem;
+            }
+
+            .feature-title {
+                font-size: 1.5rem;
+            }
+
+            .feature-description {
+                font-size: 0.9rem;
             }
         }
 
@@ -416,6 +475,8 @@
         .floating-icon:nth-child(8) { left: 75%; animation-delay: 21s; }
         .floating-icon:nth-child(9) { left: 85%; animation-delay: 24s; }
         .floating-icon:nth-child(10) { left: 95%; animation-delay: 27s; }
+        .floating-icon:nth-child(11) { left: 10%; animation-delay: 30s; }
+        .floating-icon:nth-child(12) { left: 80%; animation-delay: 33s; }
 
         @keyframes floatIcon {
             0% {
@@ -462,6 +523,8 @@
         <div class="floating-icon">🎪</div>
         <div class="floating-icon">🎊</div>
         <div class="floating-icon">🎈</div>
+        <div class="floating-icon">🌟</div>
+        <div class="floating-icon">🎀</div>
     </div>
 
     <div class="container">
@@ -471,8 +534,8 @@
             <p class="hero-subtitle">你的专属二次元探索中心</p>
             <p class="hero-description">
                 欢迎来到 AnimeHub！这里汇聚了最全面的动漫资源和角色信息。
-                无论你是在寻找新番推荐、探索经典角色，还是关注热门排行榜，
-                我们都为你提供最专业、最精美的浏览体验。
+                无论你是在寻找新番推荐、探索经典角色、关注热门排行榜，
+                还是想要欣赏精美的二次元图片，我们都为你提供最专业、最精美的浏览体验。
             </p>
         </section>
 
@@ -551,6 +614,56 @@
                     </div>
                 </div>
                 <a href="./views/TopAnime.html" class="feature-button">查看热门排行</a>
+            </div>
+
+            <!-- WaifuIM 随机图片卡片 -->
+            <div class="feature-card random-img" onclick="navigateTo('./views/random_img.html')">
+                <div class="feature-icon random-img-icon">🎨</div>
+                <h2 class="feature-title">WaifuIM 画廊</h2>
+                <p class="feature-description">
+                    探索精美的动漫角色图片世界，支持多种分类和标签筛选。
+                    高质量的二次元图片，带来视觉盛宴的完美体验。
+                </p>
+                <div class="feature-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">10K+</span>
+                        <span class="stat-label">精美图片</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">50+</span>
+                        <span class="stat-label">分类标签</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">HD</span>
+                        <span class="stat-label">高清画质</span>
+                    </div>
+                </div>
+                <a href="./views/random_img.html" class="feature-button">进入画廊</a>
+            </div>
+
+            <!-- Waifu.pics 随机图片卡片 -->
+            <div class="feature-card random-pic" onclick="navigateTo('./views/random_pic.html')">
+                <div class="feature-icon random-pic-icon">🌸</div>
+                <h2 class="feature-title">Waifu.pics 收藏</h2>
+                <p class="feature-description">
+                    简约而不简单的动漫图片世界，随机发现惊喜内容。
+                    清新的界面设计，为你带来纯净的二次元图片浏览体验。
+                </p>
+                <div class="feature-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">5K+</span>
+                        <span class="stat-label">精选图片</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">随机</span>
+                        <span class="stat-label">惊喜发现</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">简约</span>
+                        <span class="stat-label">纯净体验</span>
+                    </div>
+                </div>
+                <a href="./views/random_pic.html" class="feature-button">开始收藏</a>
             </div>
         </section>
 

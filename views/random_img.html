@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaifuIM - 动漫角色图片展示</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .controls-section {
+            margin-bottom: 20px;
+        }
+
+        .controls-title {
+            text-align: center;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            margin: 2px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn.versatile {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn.versatile:hover {
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn.nsfw {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn.nsfw:hover {
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn.refresh {
+            background: linear-gradient(45deg, #a8e6cf, #88d8a3);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.3);
+            font-size: 1rem;
+            padding: 12px 24px;
+        }
+
+        .btn.refresh:hover {
+            box-shadow: 0 6px 20px rgba(168, 230, 207, 0.4);
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.2rem;
+            color: white;
+            margin: 50px 0;
+        }
+
+        .loading::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .image-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .image-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .image-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .image-card:hover .image-container img {
+            transform: scale(1.05);
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .image-info {
+            padding: 20px;
+        }
+
+        .image-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .tags-container {
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin: 3px;
+            font-weight: 500;
+        }
+
+        .tag.nsfw {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
+        }
+
+        .artist-info {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .artist-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .artist-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .artist-link {
+            color: white;
+            text-decoration: none;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            font-size: 0.85rem;
+            transition: background 0.3s ease;
+        }
+
+        .artist-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .image-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .favorites {
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .error {
+            text-align: center;
+            color: white;
+            background: rgba(255, 107, 107, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .no-results {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            margin: 50px 0;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .modal-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-body {
+            padding: 20px;
+            color: white;
+        }
+
+        .modal-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-description {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .close {
+            color: #666;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #ff6b6b;
+        }
+
+        .modal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .modal-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .modal-detail-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .image-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .image-details {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 动画效果 */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎌 WaifuIM Gallery</h1>
+            <p>探索精美的动漫角色图片世界</p>
+        </div>
+
+        <div class="controls">
+            <div class="controls-section">
+                <div class="controls-title">🔄 快速操作</div>
+                <div class="btn-group">
+                    <button class="btn refresh" onclick="fetchRandomImages()">🔄 刷新随机图片</button>
+                </div>
+            </div>
+            
+            <div class="controls-section">
+                <div class="controls-title">🌟 通用标签</div>
+                <div class="btn-group">
+                    <button class="btn versatile" onclick="fetchByTag('maid')">👗 女仆</button>
+                    <button class="btn versatile" onclick="fetchByTag('waifu')">� Waifu</button>
+                    <button class="btn versatile" onclick="fetchByTag('marin-kitagawa')">🌊 喜多川海梦</button>
+                    <button class="btn versatile" onclick="fetchByTag('mori-calliope')">🎤 森美声</button>
+                    <button class="btn versatile" onclick="fetchByTag('raiden-shogun')">⚡ 雷电将军</button>
+                    <button class="btn versatile" onclick="fetchByTag('oppai')">💫 欧派</button>
+                    <button class="btn versatile" onclick="fetchByTag('selfies')">📸 自拍</button>
+                    <button class="btn versatile" onclick="fetchByTag('uniform')">👔 制服</button>
+                    <button class="btn versatile" onclick="fetchByTag('kamisato-ayaka')">❄️ 神里绫华</button>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="controls-title">🔞 NSFW标签</div>
+                <div class="btn-group">
+                    <button class="btn nsfw" onclick="fetchByTag('ass')">🍑 臀部</button>
+                    <button class="btn nsfw" onclick="fetchByTag('hentai')">🔞 Hentai</button>
+                    <button class="btn nsfw" onclick="fetchByTag('milf')">👩 熟女</button>
+                    <button class="btn nsfw" onclick="fetchByTag('oral')">👄 口部</button>
+                    <button class="btn nsfw" onclick="fetchByTag('paizuri')">💗 Paizuri</button>
+                    <button class="btn nsfw" onclick="fetchByTag('ecchi')">😏 色情</button>
+                    <button class="btn nsfw" onclick="fetchByTag('ero')">� 情色</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            正在加载精美图片
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="imageGrid" class="image-grid"></div>
+
+        <!-- 图片详情模态框 -->
+        <div id="imageModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close">&times;</span>
+                    <h2 id="modalTitle">图片详情</h2>
+                </div>
+                <div class="modal-body">
+                    <img id="modalImage" class="modal-image" alt="图片详情">
+                    <div id="modalDescription" class="modal-description"></div>
+                    <div id="modalTags" class="modal-tags"></div>
+                    <div id="modalDetails" class="modal-details"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://api.waifu.im/search';
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('imageGrid').innerHTML = '';
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').style.display = 'block';
+            hideLoading();
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN');
+        }
+
+        // 创建图片卡片
+        function createImageCard(imageData) {
+            const card = document.createElement('div');
+            card.className = 'image-card fade-in';
+            
+            const tagsHTML = imageData.tags.map(tag => 
+                `<span class="tag ${tag.is_nsfw ? 'nsfw' : ''}" title="${tag.description}">${tag.name}</span>`
+            ).join('');
+
+            const artistLinksHTML = [];
+            if (imageData.artist.pixiv) {
+                artistLinksHTML.push(`<a href="${imageData.artist.pixiv}" target="_blank" class="artist-link">Pixiv</a>`);
+            }
+            if (imageData.artist.twitter) {
+                artistLinksHTML.push(`<a href="${imageData.artist.twitter}" target="_blank" class="artist-link">Twitter</a>`);
+            }
+            if (imageData.artist.deviant_art) {
+                artistLinksHTML.push(`<a href="${imageData.artist.deviant_art}" target="_blank" class="artist-link">DeviantArt</a>`);
+            }
+            if (imageData.source) {
+                artistLinksHTML.push(`<a href="${imageData.source}" target="_blank" class="artist-link">原图来源</a>`);
+            }
+
+            card.innerHTML = `
+                <div class="image-container">
+                    <img src="${imageData.url}" alt="动漫角色图片" loading="lazy">
+                    <div class="image-overlay">
+                        <span class="favorites">❤️ ${imageData.favorites}</span>
+                    </div>
+                </div>
+                <div class="image-info">
+                    <div class="image-title">图片 #${imageData.image_id}</div>
+                    
+                    <div class="tags-container">
+                        ${tagsHTML}
+                    </div>
+
+                    <div class="artist-info">
+                        <div class="artist-name">🎨 艺术家: ${imageData.artist.name}</div>
+                        <div class="artist-links">
+                            ${artistLinksHTML.join('')}
+                        </div>
+                    </div>
+
+                    <div class="image-details">
+                        <div class="detail-item">
+                            <span class="detail-label">尺寸:</span> ${imageData.width} × ${imageData.height}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">文件大小:</span> ${formatFileSize(imageData.byte_size)}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">格式:</span> ${imageData.extension.toUpperCase()}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">上传时间:</span> ${formatDate(imageData.uploaded_at)}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">主色调:</span> 
+                            <span style="display: inline-block; width: 20px; height: 20px; background: ${imageData.dominant_color}; border-radius: 50%; margin-left: 5px; vertical-align: middle;"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">分级:</span> ${imageData.is_nsfw ? '🔞 NSFW' : '✅ SFW'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 添加点击事件，显示详情模态框
+            card.addEventListener('click', () => {
+                showImageModal(imageData);
+            });
+            card.style.cursor = 'pointer';
+
+            return card;
+        }
+
+        // 显示图片详情模态框
+        function showImageModal(imageData) {
+            const modal = document.getElementById('imageModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalImage = document.getElementById('modalImage');
+            const modalDescription = document.getElementById('modalDescription');
+            const modalTags = document.getElementById('modalTags');
+            const modalDetails = document.getElementById('modalDetails');
+
+            modalTitle.textContent = `图片 #${imageData.image_id} - ${imageData.artist.name}`;
+            modalImage.src = imageData.url;
+            
+            // 显示描述信息
+            if (imageData.tags && imageData.tags.length > 0) {
+                const descriptions = imageData.tags
+                    .filter(tag => tag.description)
+                    .map(tag => `<strong>${tag.name}:</strong> ${tag.description}`)
+                    .join('<br>');
+                modalDescription.innerHTML = descriptions || '暂无详细描述';
+            } else {
+                modalDescription.innerHTML = '暂无详细描述';
+            }
+
+            // 显示标签
+            const tagsHTML = imageData.tags.map(tag => 
+                `<span class="tag ${tag.is_nsfw ? 'nsfw' : ''}">${tag.name}</span>`
+            ).join('');
+            modalTags.innerHTML = tagsHTML;
+
+            // 显示详细信息
+            const artistLinksHTML = [];
+            if (imageData.artist.pixiv) {
+                artistLinksHTML.push(`<a href="${imageData.artist.pixiv}" target="_blank" class="artist-link">Pixiv</a>`);
+            }
+            if (imageData.artist.twitter) {
+                artistLinksHTML.push(`<a href="${imageData.artist.twitter}" target="_blank" class="artist-link">Twitter</a>`);
+            }
+            if (imageData.artist.deviant_art) {
+                artistLinksHTML.push(`<a href="${imageData.artist.deviant_art}" target="_blank" class="artist-link">DeviantArt</a>`);
+            }
+            if (imageData.source) {
+                artistLinksHTML.push(`<a href="${imageData.source}" target="_blank" class="artist-link">原图来源</a>`);
+            }
+
+            modalDetails.innerHTML = `
+                <div class="modal-detail-item">
+                    <strong>🎨 艺术家:</strong> ${imageData.artist.name}<br>
+                    <div style="margin-top: 8px;">${artistLinksHTML.join(' ')}</div>
+                </div>
+                <div class="modal-detail-item">
+                    <strong>📏 图片尺寸:</strong><br>
+                    ${imageData.width} × ${imageData.height} 像素
+                </div>
+                <div class="modal-detail-item">
+                    <strong>💾 文件信息:</strong><br>
+                    格式: ${imageData.extension.toUpperCase()}<br>
+                    大小: ${formatFileSize(imageData.byte_size)}
+                </div>
+                <div class="modal-detail-item">
+                    <strong>📅 上传时间:</strong><br>
+                    ${formatDate(imageData.uploaded_at)}
+                </div>
+                <div class="modal-detail-item">
+                    <strong>❤️ 收藏数:</strong><br>
+                    ${imageData.favorites} 次收藏
+                </div>
+                <div class="modal-detail-item">
+                    <strong>🎨 主色调:</strong><br>
+                    <span style="display: inline-block; width: 30px; height: 30px; background: ${imageData.dominant_color}; border-radius: 50%; margin-right: 10px; vertical-align: middle;"></span>
+                    ${imageData.dominant_color}
+                </div>
+                <div class="modal-detail-item">
+                    <strong>🔞 内容分级:</strong><br>
+                    ${imageData.is_nsfw ? '🔞 NSFW (成人内容)' : '✅ SFW (安全内容)'}
+                </div>
+                <div class="modal-detail-item">
+                    <strong>🔗 图片链接:</strong><br>
+                    <a href="${imageData.url}" target="_blank" style="color: #4ecdc4; text-decoration: none;">在新窗口中查看原图</a>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        // 通用的API请求函数
+        async function fetchImages(params = {}) {
+            showLoading();
+            
+            try {
+                const url = new URL(API_URL);
+                
+                // 默认参数
+                const defaultParams = {
+                    limit: 10,
+                    is_nsfw: 'false'
+                };
+                
+                // 合并参数
+                const finalParams = { ...defaultParams, ...params };
+                
+                Object.keys(finalParams).forEach(key => {
+                    if (Array.isArray(finalParams[key])) {
+                        finalParams[key].forEach(value => url.searchParams.append(key, value));
+                    } else {
+                        url.searchParams.append(key, finalParams[key]);
+                    }
+                });
+
+                console.log('请求URL:', url.toString());
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.images && data.images.length > 0) {
+                    displayImages(data.images);
+                } else {
+                    document.getElementById('imageGrid').innerHTML = '<div class="no-results">😔 没有找到符合条件的图片</div>';
+                }
+            } catch (error) {
+                console.error('获取图片失败:', error);
+                showError('获取图片失败: ' + error.message);
+            }
+        }
+
+        // 显示图片
+        function displayImages(images) {
+            const grid = document.getElementById('imageGrid');
+            grid.innerHTML = '';
+            
+            images.forEach((image, index) => {
+                setTimeout(() => {
+                    const card = createImageCard(image);
+                    grid.appendChild(card);
+                }, index * 100); // 添加渐进显示效果
+            });
+        }
+
+        // 按钮事件处理函数
+        function fetchRandomImages() {
+            fetchImages(); // 使用默认参数，获取10张随机图片
+        }
+
+        function fetchByTag(tag) {
+            // 判断是否为NSFW标签
+            const nsfwTags = ['ass', 'hentai', 'milf', 'oral', 'paizuri', 'ecchi', 'ero'];
+            const isNsfw = nsfwTags.includes(tag);
+            
+            fetchImages({
+                included_tags: [tag],
+                is_nsfw: isNsfw ? 'true' : 'false'
+            });
+        }
+
+        // 模态框事件处理
+        window.addEventListener('load', () => {
+            const modal = document.getElementById('imageModal');
+            const closeBtn = document.querySelector('.close');
+
+            // 关闭模态框
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            // 点击模态框外部关闭
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // 页面加载时自动获取随机图片
+            fetchRandomImages();
+        });
+    </script>
+</body>
+</html>
